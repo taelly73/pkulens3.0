@@ -22,11 +22,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish 
       <div className="hidden md:flex fixed top-0 w-full bg-pku-red text-white z-50 h-16 items-center justify-between px-6 shadow-md">
         {/* Left: Logo Area */}
         <div className="flex items-center gap-3 w-48 cursor-pointer" onClick={() => setView(ViewState.HOME)}>
-          {/* USER PROVIDED LOGO - Replace src with local file if needed */}
+          {/* Local Logo File - automatically served from public/ folder */}
           <img 
-            src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Peking_University_seal.svg/150px-Peking_University_seal.svg.png" 
-            alt="PKU Logo" 
-            className="h-10 w-10 object-contain bg-white rounded-full p-0.5"
+            src="/logo.png" 
+            alt="PKU Lens Logo" 
+            className="h-10 w-10 object-contain"
           />
           <h1 className="text-xl font-bold tracking-tight font-serif">PKU Lens</h1>
         </div>
@@ -86,9 +86,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish 
       <div className="md:hidden fixed top-0 w-full bg-pku-red text-white z-50 h-14 flex items-center justify-between px-4 shadow-md">
         <div className="flex items-center gap-2">
            <img 
-            src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Peking_University_seal.svg/150px-Peking_University_seal.svg.png" 
-            alt="PKU Logo" 
-            className="h-8 w-8 object-contain bg-white rounded-full p-0.5"
+            src="/logo.png" 
+            alt="PKU Lens Logo" 
+            className="h-8 w-8 object-contain"
           />
            <span className="font-bold font-serif text-lg">PKU Lens</span>
         </div>
