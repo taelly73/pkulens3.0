@@ -38,7 +38,7 @@ export const GeminiAssistant: React.FC<GeminiAssistantProps> = ({ user, activiti
       <div className="bg-pku-red text-white p-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5" />
-          <h3 className="font-bold">{isEnglish ? 'Lens AI Assistant' : 'Lens 智能助手'}</h3>
+          <h3 className="font-bold">{isEnglish ? 'AI Assistant' : 'AI 智能助手'}</h3>
         </div>
         <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 rounded-full p-1">
           <X className="w-5 h-5" />
