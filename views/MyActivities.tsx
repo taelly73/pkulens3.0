@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Activity, Review, Reward } from '../types';
-import { Calendar, CheckCircle, Clock, Star, Gift, Archive, MessageSquare } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Star, Gift, Archive, MessageSquare, Bookmark, X } from 'lucide-react';
 import { MOCK_REWARDS } from '../constants';
 
 interface MyActivitiesProps {
@@ -9,6 +9,7 @@ interface MyActivitiesProps {
   isEnglish: boolean;
   onCompleteActivity: (id: string) => void;
   onRedeemReward: (id: string, cost: number) => void;
+  onToggleSave: (id: string) => void;
 }
 
 export const MyActivities: React.FC<MyActivitiesProps> = ({ 
@@ -16,12 +17,14 @@ export const MyActivities: React.FC<MyActivitiesProps> = ({
   activities, 
   isEnglish,
   onCompleteActivity,
-  onRedeemReward
+  onRedeemReward,
+  onToggleSave
 }) => {
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'reviews' | 'rewards'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'reviews' | 'rewards' | 'saved'>('upcoming');
 
   const upcomingActivities = activities.filter(a => user.joinedActivities.includes(a.id));
   const pastActivities = activities.filter(a => user.completedActivities.includes(a.id));
+  const savedActivities = activities.filter(a => user.savedActivities.includes(a.id));
   
   // Render Column Headers for Desktop, Tabs for Mobile
   const ColumnHeader: React.FC<{ icon: any, title: string, count?: number, active?: boolean, onClick?: () => void }> = ({ icon: Icon, title, count, active, onClick }) => (
@@ -30,7 +33,7 @@ export const MyActivities: React.FC<MyActivitiesProps> = ({
       onClick={onClick}
     >
       <Icon className="w-5 h-5" />
-      <span className="font-bold flex-grow">{title}</span>
+      <span className="font-bold flex-grow text-sm md:text-base">{title}</span>
       {count !== undefined && <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>{count}</span>}
     </div>
   );
@@ -53,32 +56,37 @@ export const MyActivities: React.FC<MyActivitiesProps> = ({
         </div>
       </div>
 
-      {/* Mobile Tab Switcher */}
-      <div className="md:hidden grid grid-cols-4 gap-2 mb-6">
+      {/* Mobile Tab Switcher (5 Columns) */}
+      <div className="md:hidden grid grid-cols-5 gap-1 mb-6 overflow-x-auto">
         <button onClick={() => setActiveTab('reviews')} className={`flex flex-col items-center p-2 rounded-lg ${activeTab === 'reviews' ? 'bg-pku-red text-white' : 'bg-white text-gray-600'}`}>
-          <MessageSquare className="w-5 h-5 mb-1" />
-          <span className="text-[10px]">{isEnglish ? 'Reviews' : '我的评价'}</span>
+          <MessageSquare className="w-4 h-4 mb-1" />
+          <span className="text-[9px] scale-90">{isEnglish ? 'Reviews' : '评价'}</span>
         </button>
         <button onClick={() => setActiveTab('past')} className={`flex flex-col items-center p-2 rounded-lg ${activeTab === 'past' ? 'bg-pku-red text-white' : 'bg-white text-gray-600'}`}>
-          <Archive className="w-5 h-5 mb-1" />
-          <span className="text-[10px]">{isEnglish ? 'History' : '已参加'}</span>
+          <Archive className="w-4 h-4 mb-1" />
+          <span className="text-[9px] scale-90">{isEnglish ? 'History' : '历史'}</span>
         </button>
         <button onClick={() => setActiveTab('upcoming')} className={`flex flex-col items-center p-2 rounded-lg ${activeTab === 'upcoming' ? 'bg-pku-red text-white' : 'bg-white text-gray-600'}`}>
-          <Calendar className="w-5 h-5 mb-1" />
-          <span className="text-[10px]">{isEnglish ? 'Upcoming' : '即将参加'}</span>
+          <Calendar className="w-4 h-4 mb-1" />
+          <span className="text-[9px] scale-90">{isEnglish ? 'Schedule' : '日程'}</span>
+        </button>
+        <button onClick={() => setActiveTab('saved')} className={`flex flex-col items-center p-2 rounded-lg ${activeTab === 'saved' ? 'bg-pku-red text-white' : 'bg-white text-gray-600'}`}>
+          <Bookmark className="w-4 h-4 mb-1" />
+          <span className="text-[9px] scale-90">{isEnglish ? 'Saved' : '收藏'}</span>
         </button>
         <button onClick={() => setActiveTab('rewards')} className={`flex flex-col items-center p-2 rounded-lg ${activeTab === 'rewards' ? 'bg-pku-red text-white' : 'bg-white text-gray-600'}`}>
-          <Gift className="w-5 h-5 mb-1" />
-          <span className="text-[10px]">{isEnglish ? 'Rewards' : '奖励'}</span>
+          <Gift className="w-4 h-4 mb-1" />
+          <span className="text-[9px] scale-90">{isEnglish ? 'Rewards' : '奖励'}</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-250px)]">
+      {/* Desktop Grid Layout (5 Columns) */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 h-[calc(100vh-250px)]">
         
         {/* Column 1: Reviews */}
         <div className={`flex flex-col ${activeTab === 'reviews' ? 'flex' : 'hidden md:flex'}`}>
            <div className="hidden md:block mb-4">
-             <ColumnHeader icon={MessageSquare} title={isEnglish ? 'My Reviews' : '我的评价'} count={user.reviews.length} active />
+             <ColumnHeader icon={MessageSquare} title={isEnglish ? 'Reviews' : '我的评价'} count={user.reviews.length} active />
            </div>
            <div className="bg-white rounded-xl border border-gray-200 flex-grow overflow-y-auto p-4 space-y-4 shadow-sm">
              {user.reviews.map(review => (
@@ -104,7 +112,7 @@ export const MyActivities: React.FC<MyActivitiesProps> = ({
         {/* Column 2: Participated */}
         <div className={`flex flex-col ${activeTab === 'past' ? 'flex' : 'hidden md:flex'}`}>
            <div className="hidden md:block mb-4">
-             <ColumnHeader icon={Archive} title={isEnglish ? 'Participated' : '我已参加'} count={pastActivities.length} active />
+             <ColumnHeader icon={Archive} title={isEnglish ? 'History' : '已参加'} count={pastActivities.length} active />
            </div>
            <div className="bg-white rounded-xl border border-gray-200 flex-grow overflow-y-auto p-4 space-y-3 shadow-sm">
               {pastActivities.map(activity => (
@@ -120,6 +128,9 @@ export const MyActivities: React.FC<MyActivitiesProps> = ({
                   </div>
                 </div>
               ))}
+              {pastActivities.length === 0 && (
+               <div className="text-center text-gray-400 py-10 text-sm">{isEnglish ? 'No history yet' : '暂无记录'}</div>
+             )}
            </div>
         </div>
 
@@ -167,7 +178,40 @@ export const MyActivities: React.FC<MyActivitiesProps> = ({
            </div>
         </div>
 
-        {/* Column 4: Rewards */}
+        {/* Column 4: Saved (New) */}
+        <div className={`flex flex-col ${activeTab === 'saved' ? 'flex' : 'hidden md:flex'}`}>
+           <div className="hidden md:block mb-4">
+             <ColumnHeader icon={Bookmark} title={isEnglish ? 'Saved' : '我的收藏'} count={savedActivities.length} active />
+           </div>
+           <div className="bg-white rounded-xl border border-gray-200 flex-grow overflow-y-auto p-4 space-y-3 shadow-sm">
+              {savedActivities.map(activity => (
+                <div key={activity.id} className="p-3 rounded-lg border border-gray-100 hover:shadow-md transition-all cursor-pointer group relative bg-white">
+                  <div className="flex gap-3">
+                    <img src={activity.image} className="w-12 h-12 rounded-md object-cover bg-gray-100" alt="" />
+                    <div className="flex-grow min-w-0">
+                      <h4 className="font-bold text-sm text-gray-800 line-clamp-1 group-hover:text-pku-red transition-colors">
+                        {isEnglish && activity.titleEn ? activity.titleEn : activity.title}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{activity.location}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{activity.date}</p>
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onToggleSave(activity.id); }}
+                      className="absolute top-2 right-2 p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                      title={isEnglish ? "Remove from saved" : "取消收藏"}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {savedActivities.length === 0 && (
+               <div className="text-center text-gray-400 py-10 text-sm">{isEnglish ? 'No saved events' : '暂无收藏'}</div>
+             )}
+           </div>
+        </div>
+
+        {/* Column 5: Rewards */}
         <div className={`flex flex-col ${activeTab === 'rewards' ? 'flex' : 'hidden md:flex'}`}>
            <div className="hidden md:block mb-4">
              <ColumnHeader icon={Gift} title={isEnglish ? 'Rewards' : '奖励兑换'} active />

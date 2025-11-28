@@ -6,16 +6,20 @@ interface ActivityDetailProps {
   activity: Activity;
   isEnglish: boolean;
   isJoined: boolean;
+  isSaved?: boolean;
   onBack: () => void;
   onJoin: (id: string) => void;
+  onToggleSave: (id: string) => void;
 }
 
 export const ActivityDetail: React.FC<ActivityDetailProps> = ({
   activity,
   isEnglish,
   isJoined,
+  isSaved,
   onBack,
-  onJoin
+  onJoin,
+  onToggleSave
 }) => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
@@ -215,9 +219,14 @@ export const ActivityDetail: React.FC<ActivityDetailProps> = ({
       {/* Fixed Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 px-6 md:px-0 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <button className="flex flex-col items-center justify-center text-gray-500 hover:text-pku-red transition-colors min-w-[60px]">
-             <Heart className="w-6 h-6" />
-             <span className="text-xs mt-1">{isEnglish ? 'Save' : '收藏'}</span>
+          <button 
+            onClick={() => onToggleSave(activity.id)}
+            className={`flex flex-col items-center justify-center transition-colors min-w-[60px] ${
+              isSaved ? 'text-pku-red' : 'text-gray-500 hover:text-pku-red'
+            }`}
+          >
+             <Heart className={`w-6 h-6 ${isSaved ? 'fill-current' : ''}`} />
+             <span className="text-xs mt-1">{isSaved ? (isEnglish ? 'Saved' : '已收藏') : (isEnglish ? 'Save' : '收藏')}</span>
           </button>
           
           <button 

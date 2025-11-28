@@ -69,11 +69,20 @@ export enum ViewState {
   INTERACTION = 'INTERACTION',
   MY_ACTIVITIES = 'MY_ACTIVITIES',
   ACTIVITY_DETAIL = 'ACTIVITY_DETAIL',
-  CATEGORY_DETAIL = 'CATEGORY_DETAIL'
+  CATEGORY_DETAIL = 'CATEGORY_DETAIL',
+  LOGIN = 'LOGIN'
 }
 
 // Updated interaction types
 export type PostTag = 'Discussion' | 'Team Up' | 'Lost & Found' | 'Help';
+
+export interface Comment {
+  id: string;
+  user: string;
+  content: string;
+  timestamp: string;
+  likes: number;
+}
 
 export interface Post {
   id: string;
@@ -85,14 +94,15 @@ export interface Post {
   tag: PostTag;
   timestamp: string;
   likes: number;
-  commentsCount: number;
+  commentsCount: number; // Keep for display logic if needed
   isLiked?: boolean;
+  comments: Comment[]; // Added: Array of comments
 }
 
-export interface Comment {
+export interface Notification {
   id: string;
-  user: string;
+  type: 'like' | 'comment' | 'system';
   content: string;
   timestamp: string;
-  likes: number;
+  isRead: boolean;
 }

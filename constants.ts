@@ -174,8 +174,12 @@ export const MOCK_POSTS: Post[] = [
     tag: 'Team Up',
     timestamp: '10 mins ago',
     likes: 12,
-    commentsCount: 3,
-    isLiked: false
+    commentsCount: 2,
+    isLiked: false,
+    comments: [
+      { id: 'c1', user: 'Wang Wu', content: 'I am going! Meet at the south gate?', timestamp: '5 mins ago', likes: 1 },
+      { id: 'c2', user: 'Chen Qi', content: 'Count me in.', timestamp: '2 mins ago', likes: 0 }
+    ]
   },
   {
     id: 'p2',
@@ -186,7 +190,10 @@ export const MOCK_POSTS: Post[] = [
     timestamp: '1 hour ago',
     likes: 5,
     commentsCount: 1,
-    isLiked: true
+    isLiked: true,
+    comments: [
+      { id: 'c3', user: 'Zhang San', content: 'Thank you! That might be mine.', timestamp: '30 mins ago', likes: 2 }
+    ]
   }
 ];
 

@@ -1,15 +1,19 @@
-import React from 'react';
-import { ViewState } from '../types';
-import { Home, MessageCircle, Calendar, Bell, User as UserIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { ViewState, User } from '../types';
+import { Home, MessageCircle, Calendar, Bell, User as UserIcon, LogOut, LogIn } from 'lucide-react';
 
 interface NavbarProps {
   currentView: ViewState;
   setView: (view: ViewState) => void;
   isEnglish: boolean;
+  isLoggedIn: boolean;
+  user: User;
+  onLogout: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish }) => {
-  // Removed "Activities" (List) as requested because it duplicates Home/Facets
+export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish, isLoggedIn, user, onLogout }) => {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const navItems = [
     { id: ViewState.HOME, label: isEnglish ? 'Home' : '首页', icon: Home },
     { id: ViewState.INTERACTION, label: isEnglish ? 'Community' : '社群', icon: MessageCircle },
@@ -22,7 +26,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish 
       <div className="hidden md:flex fixed top-0 w-full bg-pku-red text-white z-50 h-16 items-center justify-between px-6 shadow-md">
         {/* Left: Logo Area */}
         <div className="flex items-center gap-3 w-48 cursor-pointer" onClick={() => setView(ViewState.HOME)}>
-          {/* Local Logo File - automatically served from public/ folder */}
           <img 
             src="/logo.png" 
             alt="PKU Lens Logo" 
@@ -50,17 +53,61 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish 
         </div>
 
         {/* Right: User Profile Area */}
-        <div className="flex items-center gap-4 w-48 justify-end">
-          <button className="relative p-2 hover:bg-white/10 rounded-full transition-colors">
-             <Bell className="w-5 h-5" />
-             <span className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
-          </button>
-          <div 
-            className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center border border-white/30 cursor-pointer hover:bg-white/30 transition-colors"
-            onClick={() => setView(ViewState.MY_ACTIVITIES)}
-          >
-             <UserIcon className="w-5 h-5" />
-          </div>
+        <div className="flex items-center gap-4 w-48 justify-end relative">
+          {isLoggedIn ? (
+            <>
+              <button className="relative p-2 hover:bg-white/10 rounded-full transition-colors">
+                 <Bell className="w-5 h-5" />
+                 <span className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
+              </button>
+              
+              {/* Profile Dropdown Trigger */}
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:bg-white/10 px-2 py-1 rounded-full transition-colors"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+              >
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
+                   <span className="font-bold text-sm">{user.name.charAt(0)}</span>
+                </div>
+                <span className="text-sm font-medium truncate max-w-[80px]">{user.name}</span>
+              </div>
+
+              {/* Dropdown Menu */}
+              {showProfileMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)}></div>
+                  <div className="absolute top-12 right-0 bg-white text-gray-800 rounded-xl shadow-xl py-2 w-48 z-50 animate-fade-in border border-gray-100">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-bold">{user.name}</p>
+                      <p className="text-xs text-gray-500">{user.role}</p>
+                    </div>
+                    <button 
+                      onClick={() => { setView(ViewState.MY_ACTIVITIES); setShowProfileMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <UserIcon className="w-4 h-4" />
+                      {isEnglish ? 'My Profile' : '个人中心'}
+                    </button>
+                    <button 
+                      onClick={() => { onLogout(); setShowProfileMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {isEnglish ? 'Logout' : '退出登录'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <button 
+              onClick={() => setView(ViewState.LOGIN)}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-pku-red rounded-full text-sm font-bold shadow-sm hover:shadow-md transition-all"
+            >
+              <LogIn className="w-4 h-4" />
+              {isEnglish ? 'Sign In' : '登录'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -93,13 +140,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setView, isEnglish 
            <span className="font-bold font-serif text-lg">PKU Lens</span>
         </div>
         <div className="flex items-center gap-3">
-          <Bell className="w-5 h-5" />
-          <div 
-            className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
-            onClick={() => setView(ViewState.MY_ACTIVITIES)}
-          >
-             <UserIcon className="w-4 h-4" />
-          </div>
+          {isLoggedIn ? (
+            <div 
+              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
+              onClick={() => setView(ViewState.MY_ACTIVITIES)}
+            >
+               <UserIcon className="w-4 h-4" />
+            </div>
+          ) : (
+            <button 
+              onClick={() => setView(ViewState.LOGIN)}
+              className="bg-white/20 p-1.5 rounded-full"
+            >
+              <LogIn className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </>

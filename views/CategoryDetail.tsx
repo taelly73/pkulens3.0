@@ -10,6 +10,7 @@ interface CategoryDetailProps {
   isEnglish: boolean;
   onBack: () => void;
   onViewDetail: (id: string) => void;
+  onToggleSave: (id: string) => void;
 }
 
 export const CategoryDetail: React.FC<CategoryDetailProps> = ({
@@ -18,7 +19,8 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
   user,
   isEnglish,
   onBack,
-  onViewDetail
+  onViewDetail,
+  onToggleSave
 }) => {
   // Filter activities by the selected category
   const filteredActivities = activities.filter(a => a.category === category);
@@ -145,6 +147,8 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
                   isEnglish={isEnglish}
                   onViewDetail={onViewDetail}
                   isJoined={user.joinedActivities.includes(activity.id)}
+                  isSaved={user.savedActivities.includes(activity.id)}
+                  onToggleSave={onToggleSave}
                 />
               ))}
             </div>

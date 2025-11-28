@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MOCK_POSTS } from '../constants';
-import { MessageSquare, Heart, Share2, PlusCircle, X, Send } from 'lucide-react';
-import { User, Post, PostTag } from '../types';
+import { MessageSquare, Heart, Share2, PlusCircle, X, Send, Search, Users, HelpCircle, MessageCircle, Filter } from 'lucide-react';
+import { User, Post, PostTag, Comment } from '../types';
 
 interface InteractionProps {
   isEnglish: boolean;
@@ -11,12 +11,27 @@ interface InteractionProps {
 export const Interaction: React.FC<InteractionProps> = ({ isEnglish, user }) => {
   const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
   
+  // Filter State
+  const [filterTag, setFilterTag] = useState<PostTag | 'All'>('All');
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedTag, setSelectedTag] = useState<PostTag>('Discussion');
 
+  // Comment State
+  const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
+
   const tags: PostTag[] = ['Discussion', 'Team Up', 'Lost & Found', 'Help'];
+
+  const categoryCards = [
+    { tag: 'All', label: isEnglish ? 'All Posts' : '全部动态', icon: Filter, color: 'bg-gray-100 text-gray-600 border-gray-200', desc: 'Everything' },
+    { tag: 'Discussion' as PostTag, label: isEnglish ? 'Discussion' : '话题讨论', icon: MessageCircle, color: 'bg-indigo-50 text-indigo-600 border-indigo-100', desc: 'Trending topics & chat' },
+    { tag: 'Team Up' as PostTag, label: isEnglish ? 'Team Up' : '组队大厅', icon: Users, color: 'bg-orange-50 text-orange-600 border-orange-100', desc: 'Find partners' },
+    { tag: 'Lost & Found' as PostTag, label: isEnglish ? 'Lost & Found' : '失物招领', icon: Search, color: 'bg-blue-50 text-blue-600 border-blue-100', desc: 'Lost items' },
+    { tag: 'Help' as PostTag, label: isEnglish ? 'Help' : '互助求问', icon: HelpCircle, color: 'bg-emerald-50 text-emerald-600 border-emerald-100', desc: 'Q&A' },
+  ];
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
@@ -30,13 +45,15 @@ export const Interaction: React.FC<InteractionProps> = ({ isEnglish, user }) => 
       timestamp: isEnglish ? 'Just now' : '刚刚',
       likes: 0,
       commentsCount: 0,
-      isLiked: false
+      isLiked: false,
+      comments: []
     };
 
     setPosts([newPost, ...posts]);
     setIsModalOpen(false);
     setNewPostContent('');
     setSelectedTag('Discussion');
+    setFilterTag('All'); // Reset filter to show new post
   };
 
   const handleLike = (id: string) => {
@@ -52,24 +69,212 @@ export const Interaction: React.FC<InteractionProps> = ({ isEnglish, user }) => 
     }));
   };
 
+  const toggleComments = (postId: string) => {
+    if (activeCommentPostId === postId) {
+      setActiveCommentPostId(null);
+    } else {
+      setActiveCommentPostId(postId);
+    }
+  };
+
+  const handleSendComment = (postId: string) => {
+    if (!commentText.trim()) return;
+
+    const newComment: Comment = {
+      id: `c-${Date.now()}`,
+      user: user.name,
+      content: commentText,
+      timestamp: isEnglish ? 'Just now' : '刚刚',
+      likes: 0
+    };
+
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          comments: [...post.comments, newComment],
+          commentsCount: post.commentsCount + 1
+        };
+      }
+      return post;
+    }));
+
+    setCommentText('');
+  };
+
+  // Filter posts logic
+  const displayedPosts = filterTag === 'All' 
+    ? posts 
+    : posts.filter(post => post.tag === filterTag);
+
   return (
-    <div className="pb-24 pt-4 md:pt-20 px-4 max-w-3xl mx-auto min-h-screen">
-       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {isEnglish ? "Interaction Center" : "互动中心"}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {isEnglish ? "Find teammates & discuss events" : "寻找队友，讨论热门活动"}
-          </p>
+    <div className="pb-24 pt-20 px-4 max-w-7xl mx-auto min-h-screen">
+      
+      <div className="flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Column: Facets & Navigation */}
+        <div className="w-full lg:w-1/3 space-y-6">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{isEnglish ? "Explore" : "探索板块"}</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {categoryCards.map((cat) => (
+                <div 
+                  key={cat.tag}
+                  className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer hover:shadow-md transition-all group ${
+                    filterTag === cat.tag ? 'ring-2 ring-offset-1 ring-pku-red/50 shadow-md' : ''
+                  } ${cat.color}`}
+                  onClick={() => setFilterTag(cat.tag as PostTag | 'All')}
+                >
+                  <div className="p-2 bg-white rounded-full shadow-sm">
+                    <cat.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900">{cat.label}</h3>
+                    <p className="text-xs opacity-70 font-medium">{cat.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trending Topics (Placeholder) */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hidden lg:block">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              🔥 {isEnglish ? "Hot Topics" : "热门话题"}
+            </h3>
+            <ul className="space-y-3 text-sm text-gray-600">
+              <li className="flex items-center gap-2 hover:text-pku-red cursor-pointer">
+                <span className="text-gray-300">1</span> #126thAnniversary
+              </li>
+              <li className="flex items-center gap-2 hover:text-pku-red cursor-pointer">
+                <span className="text-gray-300">2</span> #CampusMarathon
+              </li>
+              <li className="flex items-center gap-2 hover:text-pku-red cursor-pointer">
+                <span className="text-gray-300">3</span> #LibrarySeats
+              </li>
+            </ul>
+          </div>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-pku-red text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-pku-light transition-colors shadow-sm"
-        >
-          <PlusCircle className="w-4 h-4" />
-          {isEnglish ? "New Post" : "发帖"}
-        </button>
+
+        {/* Right Column: Feed */}
+        <div className="w-full lg:w-2/3">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {filterTag === 'All' ? (isEnglish ? "All Posts" : "全部动态") : 
+               categoryCards.find(c => c.tag === filterTag)?.label}
+            </h2>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-pku-red text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-pku-light transition-colors shadow-md hover:shadow-lg transform active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4" />
+              {isEnglish ? "New Post" : "发布动态"}
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {displayedPosts.map(post => (
+              <div key={post.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-fade-in hover:shadow-md transition-shadow">
+                
+                {/* Post Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-lg shadow-inner">
+                    {post.user.charAt(0)}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-gray-900">{post.user}</p>
+                        <p className="text-xs text-gray-400">{post.userRole} • {post.timestamp}</p>
+                      </div>
+                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
+                        post.tag === 'Team Up' ? 'bg-orange-50 text-orange-600' :
+                        post.tag === 'Lost & Found' ? 'bg-blue-50 text-blue-600' :
+                        post.tag === 'Help' ? 'bg-emerald-50 text-emerald-600' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {post.tag}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Post Content */}
+                <p className="text-gray-800 text-base mb-4 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                
+                {/* Post Actions */}
+                <div className="flex items-center gap-6 pt-4 border-t border-gray-50">
+                  <button 
+                    onClick={() => toggleComments(post.id)}
+                    className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${activeCommentPostId === post.id ? 'text-pku-red' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <MessageSquare className="w-4 h-4" /> 
+                    {post.commentsCount > 0 ? post.commentsCount : (isEnglish ? 'Comment' : '评论')}
+                  </button>
+                  <button 
+                    onClick={() => handleLike(post.id)}
+                    className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${post.isLiked ? 'text-pku-red' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-current' : ''}`} /> 
+                    {post.likes > 0 ? post.likes : (isEnglish ? 'Like' : '点赞')}
+                  </button>
+                  <button className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors ml-auto">
+                    <Share2 className="w-4 h-4" /> {isEnglish ? 'Share' : '分享'}
+                  </button>
+                </div>
+
+                {/* Comment Section */}
+                {activeCommentPostId === post.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in bg-gray-50/50 -mx-6 px-6 pb-2">
+                    {/* Comment List */}
+                    <div className="space-y-3 mb-4">
+                      {post.comments.length > 0 ? (
+                        post.comments.map(comment => (
+                          <div key={comment.id} className="flex gap-3 text-sm">
+                            <div className="font-bold text-gray-700 flex-shrink-0">{comment.user}:</div>
+                            <div className="flex-grow">
+                              <span className="text-gray-600">{comment.content}</span>
+                              <div className="text-xs text-gray-400 mt-0.5">{comment.timestamp}</div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center text-gray-400 text-xs py-2">
+                          {isEnglish ? 'No comments yet. Be the first!' : '暂无评论，快来抢沙发~'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Comment Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder={isEnglish ? "Write a comment..." : "写下你的评论..."}
+                        className="flex-grow px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pku-red/20 text-sm bg-white"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendComment(post.id)}
+                      />
+                      <button 
+                        onClick={() => handleSendComment(post.id)}
+                        disabled={!commentText.trim()}
+                        className="bg-pku-red text-white p-2 rounded-full hover:bg-pku-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {displayedPosts.length === 0 && (
+              <div className="text-center py-10 text-gray-400 text-sm bg-white rounded-2xl border border-dashed border-gray-200">
+                {isEnglish ? 'No posts in this category.' : '该板块暂无动态。'}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Post Creation Modal */}
@@ -84,21 +289,21 @@ export const Interaction: React.FC<InteractionProps> = ({ isEnglish, user }) => 
             </div>
             
             <div className="p-4">
-              <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
                 {tags.map(tag => (
                   <button
                     key={tag}
                     onClick={() => setSelectedTag(tag)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
                       selectedTag === tag 
-                        ? 'bg-pku-red text-white' 
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-pku-red text-white border-pku-red' 
+                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                     }`}
                   >
-                    {tag === 'Discussion' && (isEnglish ? 'Discussion' : '讨论')}
-                    {tag === 'Team Up' && (isEnglish ? 'Team Up' : '组队')}
+                    {tag === 'Discussion' && (isEnglish ? 'Discussion' : '话题讨论')}
+                    {tag === 'Team Up' && (isEnglish ? 'Team Up' : '组队大厅')}
                     {tag === 'Lost & Found' && (isEnglish ? 'Lost & Found' : '失物招领')}
-                    {tag === 'Help' && (isEnglish ? 'Help' : '求助')}
+                    {tag === 'Help' && (isEnglish ? 'Help' : '互助求问')}
                   </button>
                 ))}
               </div>
@@ -130,71 +335,6 @@ export const Interaction: React.FC<InteractionProps> = ({ isEnglish, user }) => 
           </div>
         </div>
       )}
-
-      {/* Categories / Quick Filters (Visual Only for now) */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 cursor-pointer hover:shadow-md transition-all group">
-          <h3 className="font-bold text-orange-800 mb-1 group-hover:text-orange-900">{isEnglish ? "Team Up" : "组队大厅"}</h3>
-          <p className="text-xs text-orange-600">Find partners for sports, games, and projects.</p>
-        </div>
-        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 cursor-pointer hover:shadow-md transition-all group">
-          <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-900">{isEnglish ? "Lost & Found" : "失物招领"}</h3>
-          <p className="text-xs text-blue-600">Campus items lost and found.</p>
-        </div>
-      </div>
-
-      {/* Feed */}
-      <div className="space-y-4">
-        {posts.map(post => (
-          <div key={post.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-fade-in">
-             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-lg">
-                {post.user.charAt(0)}
-              </div>
-              <div className="flex-grow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-sm text-gray-900">{post.user}</p>
-                    <p className="text-xs text-gray-400">{post.userRole} • {post.timestamp}</p>
-                  </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    post.tag === 'Team Up' ? 'bg-orange-100 text-orange-600' :
-                    post.tag === 'Lost & Found' ? 'bg-blue-100 text-blue-600' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {post.tag}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <p className="text-gray-800 text-sm mb-4 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-            
-            <div className="flex items-center gap-6 text-gray-500 text-xs">
-              <button 
-                className="flex items-center gap-1 hover:text-pku-red transition-colors"
-              >
-                <MessageSquare className="w-4 h-4" /> {post.commentsCount}
-              </button>
-              <button 
-                onClick={() => handleLike(post.id)}
-                className={`flex items-center gap-1 transition-colors ${post.isLiked ? 'text-pku-red' : 'hover:text-pku-red'}`}
-              >
-                <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-current' : ''}`} /> {post.likes}
-              </button>
-              <button className="flex items-center gap-1 hover:text-pku-red transition-colors">
-                <Share2 className="w-4 h-4" /> {isEnglish ? 'Share' : '分享'}
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {posts.length === 0 && (
-          <div className="text-center py-10 text-gray-400 text-sm">
-            {isEnglish ? 'No posts yet. Be the first to share!' : '暂无动态，快来发布第一条吧！'}
-          </div>
-        )}
-      </div>
     </div>
   );
 };

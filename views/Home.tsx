@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Activity, ActivityCategory, User, UserRole } from '../types';
 import { ActivityCard } from '../components/ActivityCard';
-import { Search, MapPin, Sparkles, TrendingUp, Calendar, ArrowRight, Layers, Users, BookOpen, Trophy, Briefcase, Heart, Palette } from 'lucide-react';
+import { Search, MapPin, Sparkles, TrendingUp, Calendar, ArrowRight, Layers, Users, BookOpen, Trophy, Briefcase, Heart, Palette, Bookmark, X } from 'lucide-react';
 import { getAIRecommendation } from '../services/geminiService';
 
 interface HomeProps {
@@ -10,6 +10,7 @@ interface HomeProps {
   isEnglish: boolean;
   onViewDetail: (id: string) => void;
   onCategorySelect: (category: ActivityCategory) => void;
+  onToggleSave: (id: string) => void;
   setView: (view: any) => void;
 }
 
@@ -19,6 +20,7 @@ export const Home: React.FC<HomeProps> = ({
   isEnglish, 
   onViewDetail, 
   onCategorySelect, 
+  onToggleSave,
   setView 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -91,29 +93,32 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
 
-          {/* Right: Mini Calendar */}
-          <div className="w-full md:w-80 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex-shrink-0">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-pku-red" />
-                {isEnglish ? 'My Schedule' : '我的日历'}
-              </h3>
-              <button className="text-xs text-pku-red hover:underline" onClick={() => setView('MY_ACTIVITIES')}>{isEnglish ? 'View All' : '查看全部'}</button>
-            </div>
-            <div className="grid grid-cols-7 gap-1 mb-2 text-center">
-              {currentWeek.map((d, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] text-gray-400">{d.day}</span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium relative ${
-                    d.date === '20' ? 'bg-pku-red text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'
-                  }`}>
-                    {d.date}
-                    {d.hasEvent && (
-                      <span className={`absolute -bottom-1 w-1.5 h-1.5 rounded-full ${d.conflict ? 'bg-red-600 ring-1 ring-white' : 'bg-pku-red'}`}></span>
-                    )}
+          {/* Right: Sidebar (Mini Calendar Only) */}
+          <div className="w-full md:w-80 flex flex-col gap-4 flex-shrink-0">
+            {/* Mini Calendar */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-pku-red" />
+                  {isEnglish ? 'My Schedule' : '我的日历'}
+                </h3>
+                <button className="text-xs text-pku-red hover:underline" onClick={() => setView('MY_ACTIVITIES')}>{isEnglish ? 'View All' : '查看全部'}</button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 mb-2 text-center">
+                {currentWeek.map((d, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-gray-400">{d.day}</span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium relative ${
+                      d.date === '20' ? 'bg-pku-red text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'
+                    }`}>
+                      {d.date}
+                      {d.hasEvent && (
+                        <span className={`absolute -bottom-1 w-1.5 h-1.5 rounded-full ${d.conflict ? 'bg-red-600 ring-1 ring-white' : 'bg-pku-red'}`}></span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -210,43 +215,18 @@ export const Home: React.FC<HomeProps> = ({
               <button className="text-sm text-gray-500 hover:text-pku-red">{isEnglish ? 'View Calendar' : '查看完整日程'}</button>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-3">
               {weekActivities.length > 0 ? weekActivities.map(activity => (
-                <div 
-                  key={activity.id} 
-                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-all cursor-pointer group"
-                  onClick={() => onViewDetail(activity.id)}
-                >
-                   <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                     <img src={activity.image} alt={activity.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                   </div>
-                   <div className="flex-grow flex flex-col justify-between">
-                     <div>
-                       <div className="flex justify-between items-start">
-                         <h4 className="font-bold text-gray-900 line-clamp-1 group-hover:text-pku-red">{isEnglish ? (activity.titleEn || activity.title) : activity.title}</h4>
-                         <span className="text-xs font-medium text-pku-red bg-red-50 px-2 py-0.5 rounded">{activity.category}</span>
-                       </div>
-                       <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                         <Calendar className="w-3.5 h-3.5" /> {activity.date} • {activity.time}
-                       </div>
-                       <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                         <MapPin className="w-3.5 h-3.5" /> {activity.location}
-                       </div>
-                     </div>
-                     <div className="flex justify-end mt-2">
-                       <button 
-                        className={`text-xs px-4 py-1.5 rounded-full font-medium transition-colors ${
-                          user.joinedActivities.includes(activity.id) 
-                            ? 'bg-green-50 text-green-600' 
-                            : 'bg-pku-red text-white hover:bg-pku-light'
-                        }`}>
-                          {user.joinedActivities.includes(activity.id) 
-                            ? (isEnglish ? 'Registered' : '已报名') 
-                            : (isEnglish ? 'View Details' : '查看详情')}
-                       </button>
-                     </div>
-                   </div>
-                </div>
+                <ActivityCard 
+                  key={activity.id}
+                  activity={activity}
+                  userRole={user.role}
+                  isEnglish={isEnglish}
+                  isJoined={user.joinedActivities.includes(activity.id)}
+                  onViewDetail={onViewDetail}
+                  isSaved={user.savedActivities.includes(activity.id)}
+                  onToggleSave={onToggleSave}
+                />
               )) : (
                 <div className="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed border-gray-200">
                   {isEnglish ? 'No activities scheduled for this week.' : '本周暂无活动安排。'}
