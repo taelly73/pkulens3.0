@@ -1,0 +1,7 @@
+{
+  "name": "Copy of PKU Lens",
+  "description": "A centralized campus activity platform for Peking University students, integrating event aggregation, social interaction, and AI-powered recommendations.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
