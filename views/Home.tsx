@@ -215,7 +215,7 @@ export const Home: React.FC<HomeProps> = ({
               <button className="text-sm text-gray-500 hover:text-pku-red">{isEnglish ? 'View Calendar' : '查看完整日程'}</button>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               {weekActivities.length > 0 ? weekActivities.map(activity => (
                 <ActivityCard 
                   key={activity.id}
