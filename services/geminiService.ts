@@ -3,15 +3,15 @@ import { Activity } from '../types';
 // ==================================================================================
 // Zhipu AI (GLM-4) Configuration
 // ==================================================================================
-// The API Key is loaded from the environment variable.
-// Configure your environment (e.g., .env file or Vercel settings) with:
-// API_KEY=a18ec8228eca4e239990562a72a74fe8.EL6jIxJ3nNfGFPTA
+// The API Key is loaded from the environment variable process.env.API_KEY.
+// On Vercel: Go to Settings -> Environment Variables -> Add "API_KEY" with your value.
 const API_KEY = process.env.API_KEY; 
 const API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
 export const getAIRecommendation = async (userRole: string, interests: string[], activities: Activity[]): Promise<string> => {
   if (!API_KEY) {
-    return "Error: API Key is missing. Please configure process.env.API_KEY.";
+    console.error("API Key is missing. Please set API_KEY in your environment variables.");
+    return "AI config error: API Key is missing. Please configure 'API_KEY' in Vercel Settings.";
   }
 
   // Simplify context to avoid token limits, taking top 15 activities
@@ -51,6 +51,8 @@ export const getAIRecommendation = async (userRole: string, interests: string[],
     });
 
     if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Zhipu API Error Detail:", errorData);
       throw new Error(`Zhipu API Error: ${response.status} ${response.statusText}`);
     }
 
@@ -59,7 +61,7 @@ export const getAIRecommendation = async (userRole: string, interests: string[],
 
   } catch (error) {
     console.error("AI Service Error:", error);
-    return "AI service is currently unavailable. Please check your network or API Key.";
+    return "AI service is currently unavailable. Please check your network or API Key configuration.";
   }
 };
 
